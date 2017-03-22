@@ -111,10 +111,19 @@ namespace Xamarin.Forms.Platform
 		}
 		void ScrollToPosition(int position, bool animated)
 		{
-			if (position == _position)
-				return;
+            /*
+             * Remove condition:
+             * if (position == _position)
+			 *      return;
+             * 
+             * I wasn't able to determine how, but there was a race condition where _position was set prior to OnElementPropertyChanged
+             * 
+             * This was intermittently causing the CarouselView to not call ScrollToPosition
+             * 
+             * Removing the condition had no ill effects on the control
+             */
 
-			if (animated)
+            if (animated)
 				_scrollToTarget = position;
 
 			_controller.ScrollToPosition(position, animated);
@@ -195,8 +204,18 @@ namespace Xamarin.Forms.Platform
 
 		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			if (e.PropertyName == nameof(Element.Position) && _position != Element.Position && !Controller.IgnorePositionUpdates)
-				ScrollToPosition(Element.Position, animated: true);
+            /*
+             * Remove condition:
+             * _position != Element.Position
+             * 
+             * I wasn't able to determine how, but there was a race condition where _position was set prior to OnElementPropertyChanged
+             * 
+             * This was intermittently causing the CarouselView to not call ScrollToPosition
+             * 
+             * Removing the condition had no ill effects on the control
+             */
+            if (e.PropertyName == nameof(Element.Position) && !Controller.IgnorePositionUpdates)
+                ScrollToPosition(Element.Position, animated: true);
 
 			if (e.PropertyName == nameof(Element.ItemsSource))
 			{
